@@ -13,6 +13,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
+#include <system_error>
 
 namespace choco_profile{
 
@@ -99,4 +100,6 @@ namespace choco_system{
 
 }
 
-
+#ifndef VERBOSE
+#define VERBOSE false
+#endif

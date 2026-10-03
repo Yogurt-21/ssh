@@ -1,23 +1,171 @@
 #include "choco.hpp"
 
+//temporary
+std::filesystem::path user_path = "/home/jaz";
+std::filesystem::path current_path = user_path;
+
 class Filesystem{
 
     private:
-
-	std::filesystem::path path = std::filesystem::current_path();
+	
 	std::vector<std::basic_string<char>> arguements;
+	bool exit_success = false;
+	std::error_code ec;
+
+	bool fileExist(std::basic_string<char> path){
+
+	    return std::filesystem::exists(path);
+	}
+
+	void fsystem_logs(std::basic_string<char> logs){
+
+	    std::println("({})", logs);
+
+	}
 
 	bool make_directory_init(){
+
+	    arguements.erase(arguements.begin());
+
+	    for (std::basic_string<char> arguement : arguements){
+
+		if (fileExist(arguement)){
+
+		    const char yes_option = 'y';
+		    const char no_option = 'n';
+		    char user_input;
+
+		    fsystem_logs("The file exist!");
+		    fsystem_logs("Do you still want to overwrite it?(y/n): ");
+
+		    do{
+
+			user_input = std::getchar();
+
+		    }while(user_input == yes_option || user_input == no_option);
+
+		    if (user_input == no_option){
+
+			if (VERBOSE){
+
+			    fsystem_logs("not making directory for this path");
+			    fsystem_logs(arguement);
+
+			}
+
+			continue;
+		    }
+
+		}else if (!fileExist(arguement)){
+
+		    if (!std::filesystem::create_directory(arguement, ec)){
+
+			fsystem_logs("failed in create directory function for this path!");
+			fsystem_logs(arguement);
+
+		    }
+
+		}
+
+
+	    }
+
+	    exit_success = true;
+	    return exit_success;
 
 	}
 
 	bool list_init(){
 
-	    for (auto &a : arguements){
+	    const char hidden_file = '.';
+	    arguements.erase(arguements.begin());
 
-		std::print("{}", a);
+	    if (!arguements.empty()){
+
+		for (std::basic_string<char> arguement : arguements){
+
+		    //there's a problem with these.
+
+		    if (arguement == " "){
+
+			for (
+			    std::filesystem::path current_iterator : 
+			    std::filesystem::directory_iterator(current_path)
+			){
+
+			    std::basic_string<char> str_iterator = 
+				static_cast<std::basic_string<char>> (current_iterator.filename());
+
+			    if (str_iterator.front() == hidden_file){
+
+				continue;
+
+			    }
+
+			    std::println("{}", str_iterator);
+
+			}
+
+		    }
+
+		    if (!fileExist(arguement)){
+
+			fsystem_logs("The path doesn't exist!");
+			break;
+
+		    }
+
+		    for (
+			std::filesystem::path current_iterator : 
+			std::filesystem::directory_iterator(arguement)
+		    ){
+
+			std::basic_string<char> str_iterator = 
+			    static_cast<std::basic_string<char>> (current_iterator.filename());
+
+			if (str_iterator.front() == hidden_file){
+
+			    continue;
+
+			}
+
+			std::println("{}", str_iterator);
+
+		    }
+
+		}
+
+		exit_success = true;
+
+		return exit_success;
+
+	    }else if (arguements.empty()){
+
+		for (
+		    std::filesystem::path current_iterator : 
+		    std::filesystem::directory_iterator(current_path)
+		){
+
+		    std::basic_string<char> str_iterator = 
+			static_cast<std::basic_string<char>> (current_iterator.filename());
+
+		    if (str_iterator.front() == hidden_file){
+
+			continue;
+
+		    }
+
+		    std::println("{}", str_iterator);
+
+		}
+
+		exit_success = true;
+
+		return  exit_success;
 
 	    }
+
+	    return exit_success;
 
 	}
 
@@ -28,13 +176,28 @@ class Filesystem{
 
 	bool change_directory_init(){
 
+	    arguements.erase(arguements.begin());
+
+	    for (std::basic_string<char> arguement : arguements){
+
+		current_path /= static_cast<std::filesystem::path> (arguement);
+
+		if (!fileExist(current_path)){
+
+		    break;
+		}
+
+		std::filesystem::current_path(current_path);
+
+	    }
+
+	    exit_success = true;
+	    return exit_success;
 	}
 
     public:
 
-	Filesystem(){}
-
-	Filesystem(std::vector<std::basic_string<char>> args)
+	Filesystem(std::vector<std::basic_string<char>> &args)
 	
 	    : arguements(args)
 
@@ -45,12 +208,44 @@ class Filesystem{
 
 	void list(){
 
-	    list_init();
+	    if (!list_init()){
+
+		throw std::runtime_error("list command failed!");
+
+	    }
+
+	    if (VERBOSE){
+
+		fsystem_logs("list command success!!");
+
+	    }
 
 	}
 	void touch(){}
-	void make_directory(){}
-	void change_directory(){}
+	void make_directory(){
+
+	    if (!make_directory_init()){
+
+		throw std::runtime_error("make directory command failed!");
+
+	    }
+
+	    if (VERBOSE){
+
+		fsystem_logs("make directory command success!!");
+
+	    }
+
+	}
+	void change_directory(){
+
+	    if (!change_directory_init()){
+
+		throw std::runtime_error("change directory command failed!");
+
+	    }
+
+	}
 
 };
 
@@ -110,10 +305,14 @@ class Application{
 
 		case COMMAND_CD_ID:
 
+		    fsystem.change_directory();
+
 		    function_exited_safe = true;
 		    return function_exited_safe; 
 
 		case COMMAND_MKDIR_ID:
+
+		    fsystem.make_directory();
 
 		    function_exited_safe = true;
 		    return function_exited_safe; 
@@ -204,8 +403,6 @@ class Application{
 
 		}
 		
-
-
 
 	    }while(is_running);
 
