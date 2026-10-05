@@ -188,6 +188,38 @@ class Filesystem{
 
 	bool touch_init(){
 
+	    do{
+
+		arguements.pop();
+		if (arguements.empty()) break;
+
+		std::basic_fstream<char> file;
+		std::ios_base::openmode fMode = std::ios_base::out;
+
+		file.open(arguements.front());
+
+		if (file.is_open()){
+
+		    std::print("Do you want to overwrite it?(y/n): ");
+		    int overwrite_it = std::getchar();
+
+		    if (overwrite_it == 'y' || overwrite_it == 'Y'){
+
+			file.open(arguements.front(), fMode);
+
+		    }
+
+		}else{
+
+		    file.open(arguements.front(), fMode);
+
+		}
+
+		file.close();
+
+	    }while(choco_system::is_running);
+
+	    return true;
 
 	}
 
@@ -259,7 +291,11 @@ class Filesystem{
 	    }
 
 	}
-	void touch(){}
+	void touch(){
+
+	    touch_init();
+
+	}
 	void make_directory(){
 
 	    if (!make_directory_init()){
@@ -338,36 +374,36 @@ class Application{
 		case COMMAND_LS_ID:
 
 		    fsystem.list();
-
 		    function_exited_safe = true;
 		    return function_exited_safe; 
 
 		case COMMAND_CD_ID:
 
 		    fsystem.change_directory();
-
 		    function_exited_safe = true;
 		    return function_exited_safe; 
 
 		case COMMAND_MKDIR_ID:
 
 		    fsystem.make_directory();
-
 		    function_exited_safe = true;
 		    return function_exited_safe; 
 
 		case COMMAND_EXIT_ID:
 
 		    exit_program();
-
 		    function_exited_safe = true;
 		    return function_exited_safe; 
 
 		case COMMAND_CLEAR_ID:
-
 		    
 		    fsystem.clear();
+		    function_exited_safe = true;
+		    return function_exited_safe; 
 
+		case COMMAND_TOUCH_ID:
+		    
+		    fsystem.touch();
 		    function_exited_safe = true;
 		    return function_exited_safe; 
 

@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <system_error>
 #include <queue>
+#include <fstream>
 
 namespace choco_profile{
 
@@ -58,7 +59,8 @@ namespace choco_system{
 	COMMAND_CD_ID = 2,
 	COMMAND_MKDIR_ID = 3,
 	COMMAND_EXIT_ID = 4,
-	COMMAND_CLEAR_ID = 5
+	COMMAND_CLEAR_ID = 5,
+	COMMAND_TOUCH_ID = 6
 
     };
 
@@ -99,13 +101,20 @@ namespace choco_system{
 
     };
 
+    constexpr CommandInfo COMMAND_TOUCH{
+
+	"touch", COMMAND_TOUCH_ID
+
+    };
+
     std::vector<CommandInfo> commands{
 
 	COMMAND_LS,
 	COMMAND_CD,
 	COMMAND_MKDIR,
 	COMMAND_EXIT,
-	COMMAND_CLEAR
+	COMMAND_CLEAR,
+	COMMAND_TOUCH
 
     };
 
