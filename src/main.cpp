@@ -6,9 +6,11 @@ std::filesystem::path current_path = user_path;
 
 class Filesystem{
 
+    //add command function here.
+
     private:
 	
-	std::vector<std::basic_string<char>> arguements;
+	std::queue<std::basic_string<char>> arguements;
 	bool exit_success = false;
 	std::error_code ec;
 
@@ -25,68 +27,91 @@ class Filesystem{
 
 	bool make_directory_init(){
 
-	    arguements.erase(arguements.begin());
+	    do{
 
-	    for (std::basic_string<char> arguement : arguements){
+		arguements.pop();
 
-		if (fileExist(arguement)){
+		if (arguements.empty()){
 
+		    
+		    exit_success = true;
+		    break;
+
+		}
+     
+		if (fileExist(arguements.front())){
+ 
 		    const char yes_option = 'y';
 		    const char no_option = 'n';
 		    char user_input;
-
+ 
 		    fsystem_logs("The file exist!");
 		    fsystem_logs("Do you still want to overwrite it?(y/n): ");
-
+ 
 		    do{
-
+ 
 			user_input = std::getchar();
-
+ 
 		    }while(user_input == yes_option || user_input == no_option);
-
+ 
 		    if (user_input == no_option){
-
+ 
 			if (VERBOSE){
-
+ 
 			    fsystem_logs("not making directory for this path");
-			    fsystem_logs(arguement);
-
+			    fsystem_logs(arguements.front());
+ 
 			}
-
+ 
 			continue;
 		    }
+ 
+		    exit_success = true;
 
-		}else if (!fileExist(arguement)){
+		}else if (!fileExist(arguements.front())){
 
-		    if (!std::filesystem::create_directory(arguement, ec)){
+		    if (!std::filesystem::create_directory(arguements.front(), ec)){
 
 			fsystem_logs("failed in create directory function for this path!");
-			fsystem_logs(arguement);
+			fsystem_logs(arguements.front());
 
 		    }
 
 		}
 
+		exit_success = true;
 
-	    }
+	    }while(choco_system::is_running);
 
-	    exit_success = true;
 	    return exit_success;
+
+	}
+
+	void clear_init(){
+
+	    std::print("\x1B[2J\x1B[H");
 
 	}
 
 	bool list_init(){
 
 	    const char hidden_file = '.';
-	    arguements.erase(arguements.begin());
 
-	    if (!arguements.empty()){
+	    do{
 
-		for (std::basic_string<char> arguement : arguements){
+		arguements.pop();
 
-		    //there's a problem with these.
+		if (!arguements.empty()){
 
-		    if (arguement == " "){
+		    if (!fileExist(arguements.front())){
+
+			exit_success = true;
+			fsystem_logs("The path doesn't exist!");
+			break;
+
+		    }
+
+		    if (arguements.front() == " "){
 
 			for (
 			    std::filesystem::path current_iterator : 
@@ -108,16 +133,10 @@ class Filesystem{
 
 		    }
 
-		    if (!fileExist(arguement)){
-
-			fsystem_logs("The path doesn't exist!");
-			break;
-
-		    }
 
 		    for (
 			std::filesystem::path current_iterator : 
-			std::filesystem::directory_iterator(arguement)
+			std::filesystem::directory_iterator(arguements.front())
 		    ){
 
 			std::basic_string<char> str_iterator = 
@@ -133,37 +152,35 @@ class Filesystem{
 
 		    }
 
-		}
+		    exit_success = true;
 
-		exit_success = true;
+		}else if (arguements.empty()){
 
-		return exit_success;
+		    for (
+			std::filesystem::path current_iterator : 
+			std::filesystem::directory_iterator(current_path)
+		    ){
 
-	    }else if (arguements.empty()){
+			std::basic_string<char> str_iterator = 
+			    static_cast<std::basic_string<char>> (current_iterator.filename());
 
-		for (
-		    std::filesystem::path current_iterator : 
-		    std::filesystem::directory_iterator(current_path)
-		){
+			if (str_iterator.front() == hidden_file){
 
-		    std::basic_string<char> str_iterator = 
-			static_cast<std::basic_string<char>> (current_iterator.filename());
+			    continue;
 
-		    if (str_iterator.front() == hidden_file){
+			}
 
-			continue;
+			std::println("{}", str_iterator);
 
 		    }
 
-		    std::println("{}", str_iterator);
+		    exit_success = true;
+
+		    break;
 
 		}
 
-		exit_success = true;
-
-		return  exit_success;
-
-	    }
+	    }while(choco_system::is_running);
 
 	    return exit_success;
 
@@ -176,11 +193,21 @@ class Filesystem{
 
 	bool change_directory_init(){
 
-	    arguements.erase(arguements.begin());
+	    do{
 
-	    for (std::basic_string<char> arguement : arguements){
+		arguements.pop();
 
-		current_path /= static_cast<std::filesystem::path> (arguement);
+		if (arguements.empty()){
+
+		    current_path /= static_cast<std::filesystem::path> (user_path);
+
+		    break;
+
+		}else if (!arguements.empty()){
+
+		    current_path /= static_cast<std::filesystem::path> (arguements.front());
+
+		}
 
 		if (!fileExist(current_path)){
 
@@ -189,20 +216,31 @@ class Filesystem{
 
 		std::filesystem::current_path(current_path);
 
-	    }
+		exit_success = true;
+		break;
 
-	    exit_success = true;
+	    }while(choco_system::is_running);
+
 	    return exit_success;
 	}
 
     public:
 
-	Filesystem(std::vector<std::basic_string<char>> &args)
-	
-	    : arguements(args)
+	Filesystem(std::vector<std::basic_string<char>> args)
 
 	{
 
+	    for (std::basic_string<char> current_arg : args){
+
+		this->arguements.push(current_arg);
+
+	    }
+
+	}
+
+	void clear(){
+
+	    clear_init();
 
 	}
 
@@ -241,7 +279,7 @@ class Filesystem{
 
 	    if (!change_directory_init()){
 
-		throw std::runtime_error("change directory command failed!");
+		fsystem_logs("the path doesn't exist");
 
 	    }
 
@@ -254,11 +292,9 @@ class Application{
     private:
 
 	std::basic_string<char> profile_prompt = choco_profile::default_prompt();
-	const bool is_running = true;
 
 	void exit_program(){
 
-	    std::print("exiting the program");
 	    std::exit(EXIT_SUCCESS);
 
 	    return void();
@@ -280,9 +316,12 @@ class Application{
 	    }
 
 	    return command_Id;
+
 	}
 
 	bool executeCommand(std::vector<std::basic_string<char>> tokens){
+
+	    //add it here lastly.
 
 	    using namespace choco_system;
 	    bool function_exited_safe = false;
@@ -320,6 +359,14 @@ class Application{
 		case COMMAND_EXIT_ID:
 
 		    exit_program();
+
+		    function_exited_safe = true;
+		    return function_exited_safe; 
+
+		case COMMAND_CLEAR_ID:
+
+		    
+		    fsystem.clear();
 
 		    function_exited_safe = true;
 		    return function_exited_safe; 
@@ -397,14 +444,15 @@ class Application{
 
 		std::vector<std::basic_string<char>> tokens = split(user_input);
 
-		if (!executeCommand(tokens)){
+		if (!tokens.empty()){
+		    if (!executeCommand(tokens)){
 
-		    throw std::runtime_error("Something went wrong!!");
+			throw std::runtime_error("Something went wrong!!");
 
+		    }
 		}
-		
 
-	    }while(is_running);
+	    }while(choco_system::is_running);
 
 	}
 

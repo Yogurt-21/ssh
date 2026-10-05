@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <system_error>
+#include <queue>
 
 namespace choco_profile{
 
@@ -48,13 +49,16 @@ namespace choco_profile{
 
 namespace choco_system{
 
+    //add command first here.
+
     enum CommandId{
 
 	COMMAND_NOT_FOUND_ID = 0,
 	COMMAND_LS_ID = 1,
 	COMMAND_CD_ID = 2,
 	COMMAND_MKDIR_ID = 3,
-	COMMAND_EXIT_ID = 4
+	COMMAND_EXIT_ID = 4,
+	COMMAND_CLEAR_ID = 5
 
     };
 
@@ -89,14 +93,23 @@ namespace choco_system{
 
     };
 
+    constexpr CommandInfo COMMAND_CLEAR{
+
+	"cl", COMMAND_CLEAR_ID
+
+    };
+
     std::vector<CommandInfo> commands{
 
 	COMMAND_LS,
 	COMMAND_CD,
 	COMMAND_MKDIR,
-	COMMAND_EXIT
+	COMMAND_EXIT,
+	COMMAND_CLEAR
 
     };
+
+    const bool is_running = true;
 
 }
 

@@ -8,9 +8,11 @@ check:
 	$(CPP_COMPILER_INCLUDE_DIR_FLAG)$(HEADER_DIR) \
 	$(CPP_SOURCE_DIR)
 
-gpp: check compile
+gpp: check compile run
 	./$(BUILD_DIR)$(CPP_OUTPUT_BIN)
 
+run:
+	./$(BUILD_DIR)$(CPP_OUTPUT_BIN)
 compile: 
 	$(CPP_COMPILER) \
 	$(CPP_COMPILER_VERSION) \
