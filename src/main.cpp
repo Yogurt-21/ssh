@@ -1,7 +1,7 @@
 #include "choco.hpp"
 
 //temporary
-std::filesystem::path user_path = "/home/jaz";
+std::filesystem::path user_path = std::filesystem::current_path();
 std::filesystem::path current_path = user_path;
 
 class Filesystem{
